@@ -1,33 +1,61 @@
 """
 Space Shooter (Galaga Style) - Mini Game
+
+to do:
+iframe Animtion, 
+speedup animation for virus,
+enemies attack while climbing up,
+moving background
 """
 
 # Анимация огня для корабля игрока
 image playerShip1:
-    "PlayerShipStill1.png"
-    0.1
-    "PlayerShipStill2.png"
-    0.1
-    "PlayerShipStill3.png"
+    animation
+    "PlayerForward1.png"
+    linear 0.1
+    "PlayerForward2.png"
+    linear 0.1
+    "PlayerForward3.png"
+    linear 0.1
     repeat
 
 # === ПЕРЕМЕННЫЕ ИГРЫ ===
-default shipPos = [0.5, 0.9]
-default moveStep = 0.015
+default ship_data = {
+    "x": 0.5, "y": 0.9, 
+    "is_iframe_active" : True, 
+    "iframe_timer" : 10,
+    "player_lives" : 3,
+    "score" : 0
+    }
+default moveStep = 0.005
 default shipBounds = { "xmin": 0.25, "xmax": 0.75, "ymin": 0.7, "ymax": 0.95 }
 default play_area = { "xmin": 0.25, "xmax": 0.75, "ymin": 0.05, "ymax": 0.95 }
 default shipMuzzleOffsetX = 0.03
 default shipMuzzleForwardY = -0.03
-
 default bullets = []
 default bullet_step = 0.025
-default enemies = []
-default enemy_size = { "hw": 0.015, "hh": 0.02 }
+```
+<summary>
+enemies_dict; array of dictionaries which contains parameters for enemy
+</summary>
+    x position              "x"
+    y position              "y"
+    aliveBool               "alive"
+    hitboxWidth             "hw"
+    hitboxHeight            "hh"
+    "hb_px_w"
+    "hb_px_h"
+    enemyInFormationBool    "in_formation" 
+    formationInWidth        "formation_x" 
+    formartionInHeight      "formation_y"
+    timeBeforeDive          "dive_timer"
+    enemyIsInDive           "dive_state"
+```
+default enemies_dict = []
+default enemySize = { "hw": 0.015, "hh": 0.02 }
 default show_enemy_hitboxes = False
 default enemy_bullets = []
 default enemy_bullet_step = 0.015
-default player_lives = 3
-default player_score = 0
 default current_wave = 1
 default game_over = False
 default formation_x_offset = 0.0
@@ -38,40 +66,40 @@ default formation_speed = 0.002
 init python:
     import pygame
     import random
-
-    def MoveShip(dx, dy):
-        shipPos[0] = max(shipBounds["xmin"], min(shipBounds["xmax"], shipPos[0] + dx))
-        shipPos[1] = max(0.0, min(1.0, shipPos[1] + dy))
+    
+    config.keymap['screenshot'].remove('noshift_K_s') #removes failed screenshot attempt error message
 
     def FireBulletUp(side):
         if game_over:
             return
+
         offset_x = shipMuzzleOffsetX if side == "right" else -shipMuzzleOffsetX
-        spawn_x = max(0.0, min(1.0, shipPos[0] + offset_x))
-        spawn_y = max(0.0, min(1.0, shipPos[1] + shipMuzzleForwardY))
+        spawn_x = max(0.0, min(1.0, ship_data["x"] + offset_x))
+        spawn_y = max(0.0, min(1.0, ship_data["y"] + shipMuzzleForwardY))
         bullets.append({ "x": spawn_x, "y": spawn_y, "vx": 0.0, "vy": -bullet_step })
 
-    def _rect_contains_point(ex, ey, hw, hh, px, py):
+    def _is_point_in_rect(ex, ey, hw, hh, px, py):
         return (ex - hw) <= px <= (ex + hw) and (ey - hh) <= py <= (ey + hh)
 
     def ResetGame():
-        global player_lives, player_score, current_wave, game_over, formation_x_offset, formation_direction
-        shipPos[0] = 0.5
-        shipPos[1] = 0.9
-        player_lives = 3
-        player_score = 0
+        global current_wave, game_over, formation_x_offset, formation_direction
+        ship_data["x"] = 0.5
+        ship_data["y"] = 0.9
+        ship_data["is_iframe_active"] = True
+        ship_data["player_lives"] = 1000
+        ship_data["score"] = 0
         current_wave = 1
         game_over = False
         formation_x_offset = 0.0
         formation_direction = 1
         bullets[:] = []
-        enemies[:] = []
+        enemies_dict[:] = []
         enemy_bullets[:] = []
         SpawnEnemyFormation(current_wave)
         renpy.restart_interaction()
 
     def SpawnEnemyFormation(wave):
-        enemies[:] = []
+        enemies_dict[:] = []
         rows = min(3 + wave // 2, 5)
         cols = 8
         start_y = 0.15
@@ -85,13 +113,13 @@ init python:
                 y = start_y + row * spacing_y
                 x = max(play_area["xmin"] + 0.02, min(play_area["xmax"] - 0.02, x))
                 y = max(play_area["ymin"] + 0.02, min(play_area["ymax"] - 0.02, y))
-                hw = enemy_size["hw"]
-                hh = enemy_size["hh"]
+                hw = enemySize["hw"]
+                hh = enemySize["hh"]
                 sw = renpy.config.screen_width
                 sh = renpy.config.screen_height
                 hb_px_w = int(hw * sw * 2)
                 hb_px_h = int(hh * sh * 2)
-                enemies.append({
+                enemies_dict.append({
                     "x": x, "y": y, "hw": hw, "hh": hh,
                     "alive": True, "hb_px_w": hb_px_w, "hb_px_h": hb_px_h,
                     "in_formation": True, "formation_x": x, "formation_y": y,
@@ -101,6 +129,7 @@ init python:
     def EnemyShoot(enemy):
         if not enemy["alive"]:
             return
+        
         enemy_bullets.append({
             "x": enemy["x"], "y": enemy["y"],
             "vx": 0.0, "vy": enemy_bullet_step
@@ -108,101 +137,127 @@ init python:
 
     def UpdateEnemies():
         global formation_x_offset, formation_direction
-        if not enemies or game_over:
+        if not enemies_dict or game_over:
             return
         
         formation_x_offset += formation_direction * formation_speed
         if formation_x_offset > 0.08 or formation_x_offset < -0.08:
             formation_direction *= -1
         
-        for e in enemies:
-            if not e["alive"]:
+        for enemy in enemies_dict:
+            if not enemy["alive"]:
                 continue
             
-            if e["in_formation"]:
-                e["x"] = max(play_area["xmin"], min(play_area["xmax"], e["formation_x"] + formation_x_offset))
-                e["dive_timer"] -= 1
-                if e["dive_timer"] <= 0:
-                    if random.random() < 0.001:
-                        e["in_formation"] = False
-                        e["dive_state"] = "diving"
-                        e["dive_target_x"] = shipPos[0]
+            if enemy["in_formation"]:
+                enemy["x"] = max(play_area["xmin"], min(play_area["xmax"], enemy["formation_x"] + formation_x_offset))
+                enemy["dive_timer"] -= 1
+                if enemy["dive_timer"] <= 0:
+                    if random.random() < 0.01:
+                        enemy["in_formation"] = False
+                        enemy["dive_state"] = "diving"
                     else:
-                        e["dive_timer"] = 60
+                        enemy["dive_timer"] = 5
+
                 if random.random() < 0.002:
-                    EnemyShoot(e)
+                    EnemyShoot(enemy)
             else:
-                if e["dive_state"] == "diving":
-                    dx = (e["dive_target_x"] - e["x"]) * 0.02
+                if enemy["dive_state"] == "diving":
+                    if(enemy["x"] < ship_data["x"]):
+                        dx = -0.002
+                    else:
+                        dx = 0.002
+                    
+                    jiterryMovement = 0.003 * random.randint(-2, 2)
                     dy = 0.015
-                    e["x"] = max(play_area["xmin"], min(play_area["xmax"], e["x"] + dx))
-                    e["y"] += dy
+                    if (abs(enemy["x"] - ship_data["x"]) > 0.02):
+                        dy /= 10
+                    
+                    enemy["x"] -= dx + jiterryMovement
+                    enemy["y"] += dy
+
                     if random.random() < 0.05:
-                        EnemyShoot(e)
-                    if e["y"] > play_area["ymax"]:
-                        e["dive_state"] = "returning"
-                elif e["dive_state"] == "returning":
-                    target_x = max(play_area["xmin"], min(play_area["xmax"], e["formation_x"] + formation_x_offset))
-                    dx = (target_x - e["x"]) * 0.03
-                    dy = (e["formation_y"] - e["y"]) * 0.03
-                    e["x"] = max(play_area["xmin"], min(play_area["xmax"], e["x"] + dx))
-                    e["y"] = max(play_area["ymin"], min(play_area["ymax"], e["y"] + dy))
-                    if abs(e["x"] - target_x) < 0.02 and abs(e["y"] - e["formation_y"]) < 0.02:
-                        e["in_formation"] = True
-                        e["dive_state"] = None
-                        e["dive_timer"] = 120
+                        EnemyShoot(enemy)
+
+                    if enemy["y"] > play_area["ymax"]:
+                        enemy["dive_state"] = "returning"
+
+                elif enemy["dive_state"] == "returning":
+                    target_x = max(play_area["xmin"], min(play_area["xmax"], enemy["formation_x"] + formation_x_offset))
+                    dx = (target_x - enemy["x"]) * 0.03
+                    dy = (enemy["formation_y"] - enemy["y"]) * 0.03
+                    enemy["x"] = max(play_area["xmin"], min(play_area["xmax"], enemy["x"] + dx))
+                    enemy["y"] = max(play_area["ymin"], min(play_area["ymax"], enemy["y"] + dy))
+                    if abs(enemy["x"] - target_x) < 0.02 and abs(enemy["y"] - enemy["formation_y"]) < 0.02:
+                        enemy["in_formation"] = True
+                        enemy["dive_state"] = None
+                        enemy["dive_timer"] = 10
 
     def UpdateEnemyBullets():
-        global player_lives, game_over
+        global game_over
+
         if not enemy_bullets or game_over:
             return
+
         remaining = []
-        for b in enemy_bullets:
-            b["x"] += b["vx"]
-            b["y"] += b["vy"]
-            if not (-0.1 <= b["x"] <= 1.1 and -0.1 <= b["y"] <= 1.1):
+        for bullet in enemy_bullets:
+            bullet["x"] += bullet["vx"]
+            bullet["y"] += bullet["vy"]
+
+            if not (-0.1 <= bullet["x"] <= 1.1 and -0.1 <= bullet["y"] <= 1.1):
                 continue
+            
             ship_hw = 0.03
             ship_hh = 0.04
-            if _rect_contains_point(shipPos[0], shipPos[1], ship_hw, ship_hh, b["x"], b["y"]):
-                player_lives -= 1
-                if player_lives <= 0:
-                    game_over = True
+            
+            if _is_point_in_rect(ship_data["x"], ship_data["y"], 
+            ship_hw, ship_hh, bullet["x"], bullet["y"]):
+                HitPlayer()
                 continue
-            remaining.append(b)
+
+            remaining.append(bullet)
+
         enemy_bullets[:] = remaining
 
     def UpdateBullets():
-        global player_score, current_wave
+        global current_wave
+
         if game_over:
             return
-        for b in bullets:
-            b["x"] += b["vx"]
-            b["y"] += b["vy"]
+
+        for bullet in bullets:
+            bullet["x"] += bullet["vx"]
+            bullet["y"] += bullet["vy"]
+
         remaining_bullets = []
-        for b in bullets:
-            if not (-0.1 <= b["x"] <= 1.1 and -0.1 <= b["y"] <= 1.1):
+        for bullet in bullets:
+            if not (-0.1 <= bullet["x"] <= 1.1 and -0.1 <= bullet["y"] <= 1.1):
                 continue
+
             hit = False
-            for e in enemies:
-                if e["alive"] and _rect_contains_point(e["x"], e["y"], e["hw"], e["hh"], b["x"], b["y"]):
-                    e["alive"] = False
+            for enemy in enemies_dict:
+                if enemy["alive"] and _is_point_in_rect(enemy["x"], enemy["y"], enemy["hw"], enemy["hh"], bullet["x"], bullet["y"]):
+                    enemy["alive"] = False
                     hit = True
-                    player_score += 100
+                    ship_data["score"] += 100
                     break
+
             if not hit:
-                remaining_bullets.append(b)
+                remaining_bullets.append(bullet)
+
         bullets[:] = remaining_bullets
-        enemies[:] = [e for e in enemies if e["alive"]]
-        if not enemies and not game_over:
+        enemies_dict[:] = [enemy for enemy in enemies_dict if enemy["alive"]]
+
+        if not enemies_dict and not game_over:
             current_wave += 1
             SpawnEnemyFormation(current_wave)
 
     def ProcessInput():
         if game_over:
             return
+
         keys = pygame.key.get_pressed()
         dx, dy = 0.0, 0.0
+
         if keys[pygame.K_w] or keys[pygame.K_UP]:
             dy -= moveStep
         if keys[pygame.K_s] or keys[pygame.K_DOWN]:
@@ -214,10 +269,35 @@ init python:
         if dx != 0.0 or dy != 0.0:
             MoveShip(dx, dy)
 
+    def ProcessIframes():
+        if(ship_data["is_iframe_active"] == True):
+            ship_data["iframe_timer"] -= 1
+
+            if(ship_data["iframe_timer"] <= 0):
+                ship_data["is_iframe_active"] = False
+                ship_data["iframe_timer"] = 60
+        
+    def HitPlayer():
+        global game_over
+        if not ship_data["is_iframe_active"]:
+            ship_data["player_lives"] -= 1
+            ship_data["is_iframe_active"] = True;
+
+        if ship_data["player_lives"] <= 0:
+            game_over = True
+    
+    def MoveShip(dx, dy):
+        ship_data["x"] = max(shipBounds["xmin"], min(shipBounds["xmax"], ship_data["x"] + dx))
+        ship_data["y"] = max(0.0, min(1.0, ship_data["y"] + dy))
+
+    def UpdatePlayer():
+        ProcessInput()
+        ProcessIframes()
+
     def HideGameScreens():
         renpy.hide_screen("play_area_screen")
         renpy.hide_screen("ship_screen")
-        renpy.hide_screen("keymap_screen")
+        renpy.hide_screen("player_screen")
         renpy.hide_screen("bullets_screen")
         renpy.hide_screen("enemy_bullets_screen")
         renpy.hide_screen("enemies_screen")
@@ -226,34 +306,35 @@ init python:
         renpy.restart_interaction()
 
 # === ЭКРАНЫ ===
-screen keymap_screen():
-    key "K_e" action [Function(FireBulletUp, "right"), Function(FireBulletUp, "left")]
+screen player_screen():
+    #key "K_q" action Function(FireBulletUp, "left")
+    #key "K_e" action Function(FireBulletUp, "right")
     key "K_SPACE" action [Function(FireBulletUp, "right"), Function(FireBulletUp, "left")]
-    key "K_q" action Function(FireBulletUp, "left")
-    timer 0.02 repeat True action Function(ProcessInput)
+    $ UpdatePlayer()
+    timer 0.02 repeat True
 
 screen ship_screen():
     zorder 100
-    add "playerShip1" xalign shipPos[0] yalign shipPos[1]
+    add "playerShip1" xalign ship_data["x"] yalign ship_data["y"]
 
 screen bullets_screen():
     zorder 110
-    for b in bullets:
-        add Solid("#00ff00") xysize (3, 10) xalign b["x"] yalign b["y"]
+    for bullet in bullets:
+        add Solid("#00ff00") xysize (3, 10) xalign bullet["x"] yalign bullet["y"]
     timer 0.02 repeat True action Function(UpdateBullets)
 
 screen enemy_bullets_screen():
     zorder 110
-    for b in enemy_bullets:
-        add Solid("#ff0000") xysize (3, 10) xalign b["x"] yalign b["y"]
+    for bullet in enemy_bullets:
+        add Solid("#ff0000") xysize (3, 10) xalign bullet["x"] yalign bullet["y"]
     timer 0.02 repeat True action Function(UpdateEnemyBullets)
 
 screen enemies_screen():
     zorder 105
-    for e in enemies:
-        add Transform("virus-36904.png", xysize=(e["hb_px_w"], e["hb_px_h"])) xalign e["x"] yalign e["y"]
+    for enemy in enemies_dict:
+        add Transform("virus-36904.png", xysize=(enemy["hb_px_w"], enemy["hb_px_h"])) xalign enemy["x"] yalign enemy["y"]
         if show_enemy_hitboxes:
-            add Solid("#00ff0080") xysize (e["hb_px_w"], e["hb_px_h"]) xalign e["x"] yalign e["y"]
+            add Solid("#00ff0080") xysize (enemy["hb_px_w"], enemy["hb_px_h"]) xalign enemy["x"] yalign enemy["y"]
     timer 0.02 repeat True action Function(UpdateEnemies)
 
 screen hud_screen():
@@ -264,8 +345,8 @@ screen hud_screen():
         background "#00000080"
         hbox:
             spacing 40
-            text "LIVES: [player_lives]" size 24 color "#ffffff"
-            text "SCORE: [player_score]" size 24 color "#ffff00"
+            text "LIVES: [ship_data[\"player_lives\"]]" size 24 color "#ffffff"
+            text "Score: [ship_data[\"score\"]]" size 24 color "#ffff00"
             text "WAVE: [current_wave]" size 24 color "#00ff00"
 
 screen game_over_screen():
@@ -279,7 +360,7 @@ screen game_over_screen():
             vbox:
                 spacing 20
                 text "GAME OVER" size 48 color "#ff0000" xalign 0.5
-                text "Final Score: [player_score]" size 32 color "#ffff00" xalign 0.5
+                text "Final Score: [ship_data[\"score\"]]" size 32 color "#ffff00" xalign 0.5
                 text "Wave Reached: [current_wave]" size 24 color "#00ff00" xalign 0.5
                 textbutton "Restart" action Function(ResetGame) xalign 0.5
                 textbutton "Return to Menu" action [Function(HideGameScreens), Jump("main_menu")] xalign 0.5
@@ -306,7 +387,7 @@ label game_space_shooter:
     show bgSpaceBackground
     show screen play_area_screen
     show screen ship_screen
-    show screen keymap_screen
+    show screen player_screen
     show screen bullets_screen
     show screen enemy_bullets_screen
     show screen enemies_screen
