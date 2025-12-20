@@ -1,4 +1,14 @@
-﻿################################################################################
+﻿init python:
+    # Подключение шрифта для интерфейса и диалогов.
+    # Используем системный шрифт Ren'Py по умолчанию (DejaVuSans.ttf),
+    # чтобы избежать ошибок, если JetBrainsMono отсутствует.
+    default_font = "DejaVuSans.ttf"
+    style.default.font = default_font
+    style.say_dialogue.font = default_font
+    style.say_label.font = default_font
+    style.button_text.font = default_font
+    style.text.font = default_font
+################################################################################
 ## Initialization
 ################################################################################
 

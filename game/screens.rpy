@@ -1,4 +1,34 @@
-﻿################################################################################
+﻿screen minigame_terminal_screen():
+    tag minigame
+    zorder 500
+    frame:
+        xalign 0.5 yalign 0.5
+        padding (30, 20)
+        background "#202020c0"
+        vbox:
+            spacing 10
+            text "Мини-игра: Терминал" size 42 color "#00ffaa" xalign 0.5
+            text "Запуск симуляции..." size 28 color "#ffffff" xalign 0.5
+
+screen minigame_result_screen(result=False):
+    tag minigame
+    zorder 500
+    frame:
+        xalign 0.5 yalign 0.5
+        padding (30, 20)
+        background "#202020c0"
+        vbox:
+            spacing 16
+            text "Результат мини-игры" size 38 color "#ffffff" xalign 0.5
+            if result:
+                text "Успех" size 34 color "#00ff99" xalign 0.5
+            else:
+                text "Провал" size 34 color "#ff4444" xalign 0.5
+            null height 12
+            textbutton "Продолжить" action Return() xalign 0.5:
+                text_size 28
+                xminimum 300
+################################################################################
 ## Initialization
 ################################################################################
 

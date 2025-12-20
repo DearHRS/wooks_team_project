@@ -1,5 +1,34 @@
-﻿image bgBlack = "bgBlack.jpg"
-image bgSpaceBackground = "bgSpaceBackground.jpg"
+﻿# ============================================================================
+# ОПРЕДЕЛЕНИЯ ИЗОБРАЖЕНИЙ
+# ============================================================================
+
+# Основные фоны (с масштабированием под размер экрана)
+image bgBlack = im.Scale("images/bgBlack.jpg", 1920, 1080)
+image bgSpaceBackground = im.Scale("images/bgSpaceBackground.jpg", 1920, 1080)
+image bgPrologBackground = im.Scale("images/backgrounds/prolog-bg.jpg", 1920, 1080)
+image bgMainCRT = im.Scale("images/backgrounds/main_background_crt.png", 1920, 1080)
+
+# Спрайты персонажей
+image hero idle = "images/characters/main_character.png"
+image hero smile = "images/characters/main_character_smiling.png"
+
+image assistant idle:
+    "images/characters/ai_assistant.png"
+
+image assistant smile:
+    "images/characters/ai_assistant_smile_expression.png"
+
+image assistant surprised:
+    "images/characters/ai_assistant_surprised.png"
+image assistant open:
+    "images/characters/ai_assistant_open_mouth.png"
+
+transform assistantPos:
+    xzoom -1
+    xalign 0.0
+    ycenter 0.58
+
+image hacker idle = "images/characters/main_villain.png"
 
 # Отключаем систему сохранений для аркадной игры
 define config.has_quicksave = False
@@ -7,51 +36,12 @@ define config.has_autosave = False
 define config.autosave_on_quit = False
 define config.autosave_on_choice = False
 
-# Экран главного меню с выбором мини-игр
-screen main_menu_screen():
-    tag menu
-    modal True
-    zorder 400
-    
-    frame:
-        xalign 0.5 yalign 0.5
-        padding (50, 40)
-        background "#000000e0"
-        
-        vbox:
-            spacing 30
-            text "MINI GAMES COLLECTION" size 52 color "#00ffff" xalign 0.5 bold True
-            
-            null height 20
-            
-            vbox:
-                spacing 15
-                xalign 0.5
-                
-                textbutton "Space Shooter (Galaga Style)" action Jump("game_space_shooter") xalign 0.5:
-                    text_size 28
-                    xminimum 400
-                
-                textbutton "Game 2 (Coming Soon)" action NullAction() xalign 0.5:
-                    text_size 28
-                    xminimum 400
-                    text_color "#808080"
-                
-                textbutton "Game 3 (Coming Soon)" action NullAction() xalign 0.5:
-                    text_size 28
-                    xminimum 400
-                    text_color "#808080"
-                
-                null height 20
-                
-                textbutton "Quit Game" action Quit() xalign 0.5:
-                    text_size 24
-                    xminimum 400
+# Определения персонажей для диалогов
+define h = Character("Герой")
+define a = Character("Помощник")
+define x = Character("Хакер")
 
 label start:
-    jump main_menu
-
-label main_menu:
-    scene bgBlack
-    show screen main_menu_screen
-    $ renpy.pause(hard=True)
+    # Начало игры - запуск пролога
+    call prologue_main
+    return
