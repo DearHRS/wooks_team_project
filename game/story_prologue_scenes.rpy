@@ -41,6 +41,7 @@ label prologue_scene_0a_intro:
 label prologue_scene_0b_home:
     scene bgPrologBackground with Dissolve(1.0)
     
+    
     h "У-у-х, как же я устаю после школы и репетиторов."
     h "Экзамены всё ближе, готов я вроде неплохо, но уже очень устал от этой бесконечной рутины."
     h "Еще и родители каждый день мозги парят с выбором профессии."
@@ -78,7 +79,7 @@ label prologue_scene_0d_hacker_appears:
     h "Эти пришельцы двигались очень странно!"
     
     # Появление хакера
-    show hacker idle at right with dissolve
+    show hacker idle at hackerRight with dissolve
     pause 0.5
     
     show expression Solid("#00000080") as prolog_overlay
@@ -94,9 +95,24 @@ label prologue_scene_0d_hacker_appears:
     h "ЧЕГО!!!"
     
     # Переход в виртуальный мир
-    scene bgBlack with Dissolve(1.0)
-    pause 1.0
-    
+    scene bgBlack with Dissolve(0.2)
+    scene bgPrologBackground
+    show hacker idle at hackerRight with vpunch
+
+    scene bgBlack with Dissolve(0.2)
+    scene bgPrologBackground
+    show hacker idle at hackerRight with hpunch
+
+    scene bgBlack with Dissolve(0.2)
+    scene bgPrologBackground
+    show hacker idle at hackerRight with hpunch
+
+    scene bgBlack with Dissolve(0.2)
+    scene bgPrologBackground
+    show hacker idle at hackerRight with vpunch
+
+    scene bgBlack with Dissolve(0.5)
+    pause 1.0    
     return
 
 # ============================================================================
@@ -106,10 +122,13 @@ label prologue_scene_0d_hacker_appears:
 label prologue_scene_1_awakening:
     # Пробуждение в виртуальном мире
     scene bgMainCRT with Dissolve(0.5)
-    show hero idle at center with dissolve
+    show hero idle at heroRight with dissolve
     
+    $textProperties = {"pos":(0.83, 0.8), "align": 1.0, "xsize": 800}
     h "Емае, че со мной случилось."
+    $textProperties["pos"] = (0.65, 0.8)
     h "{i}Неужели этот хакер и вправду смог оцифровать мое сознание через какой-то вирус!{/i}"
+    $textProperties["pos"] = (0.72, 0.8)
     h "Мне надо срочно отсюда выбираться, чтобы предупредить людей — это слишком опасно!"
     
     hide hero with dissolve
@@ -123,14 +142,19 @@ label prologue_scene_1_awakening:
 label prologue_scene_2_meeting_assistant:
     scene bgMainCRT with dissolve
     show assistant surprised at assistantPos with dissolve
-    show hero idle at right with dissolve
+    show hero idle at heroRight with dissolve
     
+    $textProperties["pos"] = (0.58, 0.8)
     a "Новая прошивка?"
     a "Я не видела тебя здесь раньше."
+    $textProperties["pos"] = (0.932, 0.8)
     h "Нет, я человек."
+    $textProperties["pos"] = (0.7, 0.8)
     h "Я скачал игру из интернета, а там оказался вирус, и хакер как-то смог оцифровать мое сознание через него, и я оказался здесь…"
     
     show assistant idle at assistantPos
+    $textProperties["pos"] = (0.58, 0.8)
+    $textProperties["align"] = 0.0
     a "Хм, да, проблема серьезная, но я думаю, я смогу тебе помочь."
     h "Да, пожалуйста, помоги!!!"
     
@@ -147,7 +171,7 @@ label prologue_scene_2_meeting_assistant:
 label prologue_scene_3_rescue_plan:
     scene bgMainCRT with dissolve
     show assistant idle at assistantPos with dissolve
-    show hero idle at right with dissolve
+    show hero idle at heroRight with dissolve
     
     a "Тебе нужно найти этого хакера и вернуть свои данные, тогда и твое сознание вернется в тело."
     a "Не будем терять время и начнем с начала."
@@ -167,7 +191,7 @@ label prologue_scene_4_reconnaissance_prep:
     # Переход на сцену (синий — сетевая подготовка)
     scene bgMainCRT with Dissolve(0.5)
     show assistant idle at assistantPos with dissolve
-    show hero idle at right with dissolve
+    show hero idle at heroRight with dissolve
     
     a "Ну все, теперь ты готов к тому, чтобы вычислить этого хакера! Подключаю тебя к сети!"
     a "Но сначала давай я расскажу тебе о разведке — это важный этап."
@@ -204,19 +228,68 @@ label prologue_scene_4_reconnaissance_prep:
     # Викторина: разведка
     python:
         reconnaissance_quiz = {
-            "title": "РАЗВЕДКА: Основы кибербезопасности",
+            "title": ("РАЗВЕДКА: Основы кибербезопасности", 54),
             "lives": 3,
             "questions": [
-                ("Что является главной целью этапа разведки?", ("Немедленно взломать систему", "Собрать максимум информации о цели", "Стереть логи после атаки", "Написать финальный отчет"), 1),
-                ("Какой тип разведки не оставляет прямых следов в логах?", ("Активная разведка", "Пассивная разведка", "Внутренняя разведка", "Социальная инженерия"), 1),
-                ("Изучение профилей сотрудников в GitHub — это...", ("Только активная разведка", "Только пассивная разведка", "Внутренняя разведка", "Не является разведкой"), 1),
-                ("Скачивание backup_2023.zip с сайта компании...", ("Всегда допустимо", "Часть пассивной разведки", "Допустимо при разрешении", "Никогда не делается"), 2),
-                ("Легальная практика для тренировки навыков?", ("Сканировать случайные сайты", "Тренироваться на HackTheBox", "Сканировать банк из интереса", "Купить утекшие данные"), 1),
-                ("Ключевое отличие белого хакера от злоумышленника?", ("Более крутые инструменты", "Быстрее проводит разведку", "Действует в рамках закона", "Нет отличий"), 2),
+                (("Что является главной целью этапа разведки?", 60), 
+                    (
+                        ("Собрать максимум информации о цели", 50), 
+                        ("Немедленно взломать систему", 50),
+                        ("Стереть логи после атаки", 50), 
+                        ("Написать финальный отчет", 50)
+                    ), 0
+                ),
+                (("Какой тип разведки не оставляет прямых следов в логах?", 60), 
+                    (
+                        ("Активная разведка", 50), 
+                        ("Пассивная разведка", 50), 
+                        ("Внутренняя разведка", 50), 
+                        ("Социальная инженерия", 50)
+                    ), 1
+                ),
+                (("Изучение профилей сотрудников в GitHub — это...", 60), 
+                    (
+                        ("Только активная разведка", 50), 
+                        ("Внутренняя разведка", 50), 
+                        ("Не является разведкой", 50),
+                        ("Только пассивная разведка", 50), 
+                    ), 3
+                ),
+                (("Скачивание backup_2023.zip с сайта компании...", 60), 
+                    (
+                        ("Всегда допустимо", 50), 
+                        ("Часть пассивной разведки", 50), 
+                        ("Допустимо при разрешении", 50), 
+                        ("Никогда не делается", 50)
+                    ), 2
+                ),
+                (("Легальная практика для тренировки навыков?", 60), 
+                    (
+                        ("Сканировать случайные сайты", 50), 
+                        ("Тренироваться на HackTheBox", 50), 
+                        ("Сканировать банк из интереса", 50), 
+                        ("Купить утекшие данные", 50)
+                    ), 1
+                ),
+                (("Ключевое отличие белого хакера от злоумышленника?", 60), 
+                    (
+                        ("Более крутые инструменты", 50), 
+                        ("Быстрее проводит разведку", 50), 
+                        ("Действует в рамках закона", 50), 
+                        ("Нет отличий", 50)
+                    ), 2
+                )
             ]
         }
-    
-    call quiz_game(reconnaissance_quiz)
+
+    $ config.skipping = None
+    $ config.allow_skipping = False
+    call quiz_game(reconnaissance_quiz) from _call_quiz_game
+    $ config.allow_skipping = True
+
+    if reconnaissance_quiz["lives"] <= 0:
+        jump prologue_scene_4_reconnaissance_prep
+
     return
 
 
@@ -227,14 +300,13 @@ label prologue_scene_4_reconnaissance_prep:
 label prologue_scene_5_reconnaissance_results:
     scene bgMainCRT with dissolve
     show assistant smile at assistantPos with dissolve
-    show hero smile at right with dissolve
+    show hero smile at heroRight with dissolve
     
     a "Отлично, у тебя получилось вычислить всю необходимую информацию о хакере!"
     a "Теперь мы можем продвигаться дальше."
     
     hide assistant
     hide hero
-    with dissolve
     return
 
 
@@ -243,33 +315,40 @@ label prologue_scene_5_reconnaissance_results:
 # ============================================================================
 # Хакер обнаруживает вторжение героя и угрожает его данным.
 label prologue_scene_6_hacker_threat:
-    scene bgMainCRT with dissolve
+    #scene bgMainCRT with dissolve
     
     # Появление хакера
-    show hacker idle at center with vpunch
+    show hacker idle at hackerCentre with vpunch
     pause 0.5
-    
+    show hacker at move(0.65, 0.7, 0.3)
+    pause 0.3
+    $textProperties["pos"] = (0.38, 0.8)
+    $textProperties["align"] = 1.0
     x "ТАК! Это что такое! Кто в моей системе копошится!"
+    $textProperties["pos"] = (0.446, 0.8)
     x "А это ты, что надеешься выбраться отсюда?"
+    $textProperties["pos"] = (0.38, 0.8)
     x "Ничего у тебя не получится! Твои данные уже у меня, и скоро я их отформатирую, и никто даже не вспомнит, что ты жил!"
+    $textProperties["pos"] = (0.735, 0.8)
     x "УДАЧИ."
     
     hide hacker with dissolve
     
-    show hero idle at right with dissolve
+    show hero idle at heroRight with dissolve
+    $textProperties["pos"] = (0.79, 0.8)
     h "{i}Мне конец, что родители скажут!{/i}"
     
     show assistant idle at assistantPos with dissolve
+    $textProperties["pos"] = (0.58, 0.8)
+    $textProperties["align"] = 0.0
     a "Без паники! У нас еще есть время, чтобы тебя спасти."
     a "Ты достал информацию о местоположении слабых зон в защите хакера."
     a "Нам нужно проанализировать полученную информацию."
     
+    $textProperties["pos"] = (0.88, 0.8)
     h "{i}Мне точно не успеть…{/i}"
+    $textProperties["pos"] = (0.58, 0.8)
     a "Все проще, чем ты думаешь!"
-    
-    hide assistant
-    hide hero
-    with dissolve
     return
 
 
@@ -279,12 +358,20 @@ label prologue_scene_6_hacker_threat:
 # Помощник готовит героя к анализу уязвимостей.
 label prologue_scene_7_analysis_prep:
     # Переход на сцену (красный — опасность и уязвимости)
-    scene bgMainCRT with Dissolve(0.5)
+    scene bgMainCRT with dissolve
     show assistant idle at assistantPos with dissolve
-    show hero idle at right with dissolve
+    show hero idle at heroRight with dissolve
     
     a "Тебе нужно провести анализ уязвимостей и подобраться к базе данных, чтобы нанести последний удар!"
-    
+    a "Анализ, второй этап который нам нужно провести"
+    a "Его суть в составлении плана по получению доступа к серверу или к необходимым данным."
+    a "Этап 1: Это внешняя разведка ее мы уже провели."
+    a "Этап 2: Получить первоначальный доступ, можно использовать публичный эксплоитдля выполнения кода на сервере."
+    a "Этап 3: После получения доступа необходимо изучить сервер изнутри, найти файлы с паролями, эксплуатировать уязвимость в ОС, чтобы стать администратором."
+    a "Этап 4: Далее можно использовать украденные пароли или уязвимости, чтобы перейти с этого сервера на другие в сети."
+    a "Этап 5: Достижение цели. Найти и извлечь целевые данные с сервера БД."
+    a "На этом все тебе пора!"
+
     hide assistant
     hide hero
     with dissolve
@@ -292,18 +379,59 @@ label prologue_scene_7_analysis_prep:
     # Викторина: анализ уязвимостей
     python:
         analysis_quiz = {
-            "title": "АНАЛИЗ: Уязвимости систем",
+            "title": ("АНАЛИЗ: Уязвимости систем", 60),
             "lives": 3,
             "questions": [
-                ("Что такое SQL-инъекция?", ("Укол в базу данных", "Атака через уязвимости в запросах", "Вид антивируса", "Медицинская процедура"), 1),
-                ("Что означает DoS-атака?", ("Операционная система", "Атака отказа в обслуживании", "Антивирусная программа", "Игровой режим"), 1),
-                ("Какой протокол безопаснее?", ("HTTP", "FTP", "HTTPS", "TELNET"), 2),
-                ("Что такое zero-day уязвимость?", ("Старая ошибка", "Неизвестная разработчикам уязвимость", "Вирус", "Обновление"), 1),
-                ("Для чего нужен VPN?", ("Для игр", "Для анонимности и защиты данных", "Для ускорения", "Для музыки"), 1),
+                (("Что такое SQL-инъекция?", 60), 
+                    (
+                        ("Укол в базу данных", 50), 
+                        ("Атака через уязвимости в запросах", 50), 
+                        ("Вид антивируса", 50), 
+                        ("Медицинская процедура", 50)
+                    ), 1
+                ),
+                (("Что означает DoS-атака?", 60), 
+                    (
+                        ("Операционная система", 50), 
+                        ("Антивирусная программа", 50), 
+                        ("Игровой режим", 50),
+                        ("Атака отказа в обслуживании", 50)
+                    ), 3
+                ),
+                (("Какой протокол безопаснее?", 60), 
+                    (
+                        ("HTTP", 60), 
+                        ("FTP", 60), 
+                        ("HTTPS", 60), 
+                        ("TELNET", 60)
+                    ), 2
+                ),
+                (("Что такое zero-day уязвимость?", 60), 
+                    (
+                        ("Старая ошибка", 50), 
+                        ("Неизвестная разработчикам уязвимость", 50), 
+                        ("Вирус", 50), 
+                        ("Обновление", 50)
+                    ), 1
+                ),
+                (("Для чего нужен VPN?", 60), 
+                    (
+                        ("Для анонимности и защиты данных", 50), 
+                        ("Для игр", 50), 
+                        ("Для ускорения", 50), 
+                        ("Для музыки", 50)
+                    ), 0
+                )
             ]
         }
     
-    call quiz_game(analysis_quiz)
+    $ config.skipping = None
+    $ config.allow_skipping = False
+    call quiz_game(analysis_quiz) from _call_quiz_game_1
+    $ config.allow_skipping = True
+
+    if analysis_quiz["lives"] <= 0:
+        jump prologue_scene_7_analysis_prep
     return
 
 
@@ -313,26 +441,40 @@ label prologue_scene_7_analysis_prep:
 # Герой получает доступ, но хакер атакует и "стирает" помощника.
 label prologue_scene_8_hacker_attack:
     scene bgMainCRT with dissolve
-    show hero smile at right with dissolve
-    
+    show hero smile at heroRight with dissolve
+
+    $textProperties["pos"] = (0.8, 0.8)
     h "Отлично, у меня получилось!"
+    $textProperties["pos"] = (0.905, 0.8)
     h "Доступ получен!"
     
     show assistant smile at assistantPos with dissolve
+    $textProperties["pos"] = (0.58, 0.8)
     a "Хорошо, осталс—…"
     
     # Хакер стирает помощника
-    hide assistant with Dissolve(0.2)
+    show hacker idle at hackerCentre
     with vpunch
-    
-    show hacker idle at center with dissolve
+    hide assistant with Dissolve(0.05)
+    pause 0.3
+    show hacker at move(0.1, 0.7, 0.5)
+    pause 0.4
+    show hacker at hackerLeft with Dissolve(0.1)
+    show hero idle at heroRight
     x "ОП! Что, не ждали?"
     
+    $textProperties["pos"] = (0.905, 0.8)
     h "ЧТО ТЫ СДЕЛАЛ?!?"
+
+    $textProperties["pos"] = (0.58, 0.8)
     x "Да так, начал потихоньку подчищать файлы, а что — не нравится?"
     x "Сразу так тихо стало."
     x "Хорошо так."
+
+    $textProperties["pos"] = (0.89, 0.8)
     h "Ты за все ответишь!!!"
+    
+    $textProperties["pos"] = (0.58, 0.8)
     x "Хорошо, жду."
     
     hide hacker
@@ -347,8 +489,9 @@ label prologue_scene_8_hacker_attack:
 # Помощник возвращается, но в поврежденном состоянии. Дает последние инструкции.
 label prologue_scene_9_glitched_assistant:
     scene bgMainCRT with dissolve
-    show hero idle at right with dissolve
+    show hero idle at heroRight with dissolve
     
+    $textProperties["pos"] = (0.84, 0.8)
     h "{i}Что же мне теперь делать…{/i}"
     
     # Помощник появляется с глитч-эффектом
@@ -356,15 +499,34 @@ label prologue_scene_9_glitched_assistant:
     hide assistant with Dissolve(0.1)
     show assistant surprised at assistantPos with Dissolve(0.1)
     
+    $textProperties["pos"] = (0.58, 0.8)
     a "Тебе осталось немного…"
+    $textProperties["pos"] = (0.93, 0.8)
     h "Ты еще жива!!!"
-    a "Ненадолго, но времени хватит…"
-    a "Тебе осталось получить доступ к базе данных."
+    $textProperties["pos"] = (0.58, 0.8)
+    a "Ненадолго, но времени хватит…"    
+    show assistant idle at assistantPos
+    a "Тебе осталось узнать про последний этап. Про получение доступа и дальнейших действиях."
+    a "При получении первого доступа необходимо обеспечить постоянный доступ к взломанной сети."
+    a "Этого можно добиться через установку вирусов, создание скрытых учетных записей или через настройки автозапуска."
+    a "После этого можно начинать получать более высокие уровни доступа, либо через использования уязвимостей ОС, либо через получение учетных данных"
+    a "После получения достаточного уровня системных прав можно начинать горизонтальное перемещение по остальным частям системы с более ценной информацией."
+    a "Можно использовать общие ресурсы сети, например, общие сетевые папки или использовать ту же уязвимость, что и при первой атаке, но уже из сети."
+    a "Находя необходимые данные их можно пересылать на внешний хранитель и на этом все."
     a "И помни — он тебя ждет…"
     a "Я в тебя верю…"
+
+    show assistant idle at assistantPos with Dissolve(0.08)
+    hide assistant with Dissolve(0.1)
+    show assistant idle at assistantPos with Dissolve(0.08)
+    hide assistant with Dissolve(0.1)
+    show assistant idle at assistantPos with Dissolve(0.08)
+    hide assistant with Dissolve(0.1)
+    $textProperties["pos"] = (0.93, 0.8)
+    h "Я не подведу."
     
-    hide assistant with Dissolve(0.5)
-    hide hero with dissolve
+    #hide assistant with Dissolve(0.5)
+    #hide hero with dissolve
     return
 
 
@@ -373,16 +535,12 @@ label prologue_scene_9_glitched_assistant:
 # ============================================================================
 # Герой направляется к базе данных с решимостью закончить с хакером.
 label prologue_scene_10_journey_to_data:
-    scene bgMainCRT with dissolve
-    show hero idle at center with dissolve
+    #scene bgMainCRT with dissolve
+    show hero idle at heroRight with dissolve
     
-    h "Я не подведу."
-    
-    scene bgMainCRT with Dissolve(0.5)
-    show hero idle at center with dissolve
-    
+    $textProperties["pos"] = (0.73, 0.8)
+    $textProperties["align"] = 1.0
     h "{i}Что ж… ну вот я и пришел к данным. Пора заканчивать с хакером.{/i}"
-    
     hide hero with dissolve
     return
 
@@ -393,18 +551,26 @@ label prologue_scene_10_journey_to_data:
 # Герой встречается с хакером для финального боя.
 label prologue_scene_11_final_confrontation:
     scene bgMainCRT with dissolve
-    show hacker idle at left with dissolve:
-        xzoom -1
-    show hero idle at right with dissolve
+    show hacker idle at hackerLeft with dissolve
+    show hero idle at heroRight with dissolve
     
+    
+    $textProperties["pos"] = (0.565, 0.8)
+    $textProperties["align"] = 0.0
     x "О, ты все-таки пришел."
     x "Я уж начал думать, что без своей подружки не дойдешь."
+    $textProperties["pos"] = (0.765, 0.8)
     h "Я заберу данные и восстановлю ее!"
+    $textProperties["pos"] = (0.565, 0.8)
     x "Слишком много о себе думаешь."
     x "Я уже запустил процесс форматирования, и скоро он дойдет и до твоего сознания."
     x "Для тебя это конец! Смирись."
+    $textProperties["pos"] = (0.65, 0.8)
+    $textProperties["align"] = 1.0
     h "Нет, я не позволю тебе и дальше терроризировать людей."
+    $textProperties["pos"] = (0.89, 0.8)
     h "Ты слишком опасен."
+    $textProperties["pos"] = (0.565, 0.8)
     x "Ну что же, если так хочешь…"
     x "Станцуем!"
     
@@ -412,9 +578,145 @@ label prologue_scene_11_final_confrontation:
     hide hero
     with dissolve
     
-    # Вызов мини-игры боя (Space Shooter) — финальный бой
-    call game_space_shooter(return_to_caller=True)
-    
+    # Викторина: получению доступа 
+    python:
+        analysis_quiz = {
+            "title": ("Теория по получению доступа", 65),
+            "lives": 5,
+            "questions": [
+                (("Что является ГЛАВНЫМ юридическим отличием действий злонамеренного хакера от этичного хакера (белого хакера)?", 53), 
+                    (
+                        ("Используемые инструменты (у хакера — незаконные, у белого — законные)", 40), 
+                        ("Уровень технических навыков", 50), 
+                        ("Наличие письменного разрешения от владельца тестируемой системы", 40), 
+                        ("Цель — заработать деньги или нет", 50)
+                    ), 2
+                ),
+                (("Во время легального тестирования веб-приложения вы обнаружили уязвимость SQL-инъекции. Ваши СЛЕДУЮЩИЕ действия?", 48), 
+                    (
+                        ("Немедленно эксплуатировать уязвимость, чтобы получить доступ к базе данных и доказать серьезность", 36), 
+                        ("Подробно задокументировать шаги воспроизведения, не выходя за пределы минимально необходимого для подтверждения, и включить в отчет", 32), 
+                        ("Выйти за рамки согласованной зоны тестирования (scope), чтобы найти больше уязвимостей", 38), 
+                        ("Связаться с публичными СМИ, чтобы заставить компанию быстрее исправить уязвимость", 40)
+                    ), 1
+                ),
+                (("Что такое «ответственное раскрытие уязвимости» (ResponsibleDisclosure)?", 55), 
+                    (
+                        ("Незамедлительная публикация уязвимости в открытых источниках и соцсетях", 40), 
+                        ("Сообщение об уязвимости только владельцу системы после ее полной эксплуатации", 40), 
+                        ("Сообщение владельцу системы, предоставление разумного срока на исправление, публикация после фикса или по истечении срока", 33), 
+                        ("Продажа информации об уязвимости на черном рынке, если владелец не отвечает", 40)
+                    ), 2
+                ),                
+                (("Что из этого НЕ является типичной фазой классической модели тестирования на проникновение?", 55), 
+                    (
+                        ("Разведка", 52), 
+                        ("Получение доступа", 52), 
+                        ("Уничтожение данных", 52), 
+                        ("Документирование и отчет", 52)
+                    ), 2
+                ),                
+                (("Вы обнаружили на публичном форуме базу данных с логинами и паролями пользователей известного сервиса. Вы не имеете к нему отношения. Ваш наиболее этичный и законный поступок?", 45), 
+                    (
+                        ("Скачать базу для личного анализа и защиты своих аккаунтов", 40), 
+                        ("Написать владельцам сервиса через официальный канал, сообщить о находке, не скачивая данные", 38), 
+                        ("Опубликовать информацию о найденной утечке в соцсетях, чтобы пользователи сменили пароли", 38), 
+                        ("Ничего не делать — это не ваша проблема", 40)
+                    ), 1
+                ),                
+                (("Во время теста вы получили доступ к файлу с хэшами паролей сотрудников. Что вы сделаете с ним ДАЛЬШЕ в рамках этичного тестирования?", 48), 
+                    (
+                        ("Попробуете взломать хэши с помощью программы, чтобы продемонстрировать слабые пароли", 39), 
+                        ("Немедленно удалите файл, чтобы не нарушать конфиденциальность", 44), 
+                        ("Перешлете файл себе на личный сервер для детального анализа", 44), 
+                        ("Используете хэши для входа в другие системы компании без дополнительного согласования", 38)
+                    ), 0
+                ),
+                (("Что такое «0-day уязвимость»?", 60), 
+                    (
+                        ("Уязвимость, которая была обнаружена и исправлена в день выпуска обновления", 45), 
+                        ("Уязвимость, о которой известно уже более 30 дней", 55), 
+                        ("Уязвимость, неизвестная вендору и не имеющая заплатки на момент обнаружения", 45), 
+                        ("Уязвимость с нулевым уровнем критичности", 55)
+                    ), 2
+                ),
+                (("Что из перечисленного является примером «бокового перемещения»?", 55), 
+                    (
+                        ("Получение доступа к рабочей станции рядового сотрудника", 45), 
+                        ("Установка вредоносного ПО на первоначально скомпрометированную машину", 40), 
+                        ("Сканирование сети извне на открытые порты", 50),
+                        ("Использование учетных данных с этой рабочей станции для доступа к серверу с финансами", 39)
+                    ), 3
+                ),
+                (("Что чаще всего является конечным продуктом работы белого хакера по договору пентеста?", 55), 
+                    (
+                        ("Написанный эксплойт для найденной уязвимости", 45), 
+                        ("Гарантийное письмо о полной безопасности системы", 45),
+                        ("Детальный технический отчет с описанием уязвимостей, шагов воспроизведения и рекомендаций по исправлению", 35), 
+                        ("Установленный патч на все найденные уязвимости", 45)
+                    ), 2
+                ),
+                (("В ходе тестирования вы случайно вызвали сбой критического сервиса. Ваши действия:", 50), 
+                    (
+                        ("Продолжить тестирование, чтобы найти больше проблем", 45), 
+                        ("Немедленно остановить все тесты и связаться с ответственным лицом по договору", 39), 
+                        ("Попытаться самостоятельно восстановить сервис, не сообщая никому", 45), 
+                        ("Удалить логи своих действий и покинуть сеть", 48)
+                    ), 1
+                ),
+                (("Что такое \"чистая комната\" в анализе вредоносного ПО?", 60), 
+                    (
+                        ("Специальная лаборатория с фильтрами воздуха", 45), 
+                        ("Команда разработчиков, не знающих о существовании вредоносного кода", 42), 
+                        ("Метод обратной разработки без доступа к интернету", 45),
+                        ("Изолированная виртуальная среда для анализа образцов", 45)
+                    ), 3
+                ),
+                (("Вы нашли уязвимость в библиотеке с открытым исходным кодом. Кому вы должны сообщить в первую очередь?", 50), 
+                    (
+                        ("Только компаниям, которые используют эту библиотеку", 45), 
+                        ("Разработчикам библиотеки через безопасный канал", 45), 
+                        ("Опубликовать в ВК с хештегом #секретно", 48), 
+                        ("Сообщить только если библиотека популярная", 45)
+                    ), 1
+                ),
+                (("Что такое \"криминалистическая стойкость\" в действиях хакера?", 55), 
+                    (
+                        ("Удаление логов и использование шифрования для затруднения расследования", 40), 
+                        ("Физическая устойчивость к допросу", 50), 
+                        ("Использование только легальных инструментов", 50), 
+                        ("Наличие адвоката на случай ареста", 50)
+                    ), 0
+                ),
+                (("Что такое \"этика хакинга\" в контексте сообщества, и как она отличается от юридических норм?", 52), 
+                    (
+                        ("То же самое, что и законы страны", 50), 
+                        ("Правила поведения на хакерских конференциях", 48), 
+                        ("Требования к оформлению отчетов по пентесту", 48),
+                        ("Неписаные правила уважения к знаниям, помощи новичкам, ответственного раскрытия", 35), 
+                    ), 3
+                ),
+                (("При анализе вредоносного файла PDF вы обнаружили JavaScript. Какой инструмент наиболее подходит для безопасного анализа?", 48), 
+                    (
+                        ("AdobeAcrobatReader", 53), 
+                        ("Изолированная среда с инструментами типа PDFid, peepdf", 48), 
+                        ("Открытие файла в текстовом редакторе", 48), 
+                        ("Загрузка файла на VirusTotal", 55)
+                    ), 1
+                )
+            ]
+        }
+
+    $ config.skipping = None
+    $ config.allow_skipping = False
+    call quiz_game(analysis_quiz) from _call_quiz_game_2
+    $ config.allow_skipping = False
+
+    $"""
+    if analysis_quiz["lives"] <= 0:
+        jump prologue_scene_9_glitched_assistant
+    $"""
+
     # После возврата из мини-игры показываем концовку
     jump prologue_ending
 
@@ -427,52 +729,74 @@ label prologue_ending:
     scene bgMainCRT with Dissolve(1.0)
     
     # Проверяем результат игры (победа или поражение)
-    if ship_data["lives"] > 0:
+    if analysis_quiz["lives"] > 0:
         # Победная концовка
-        show hero smile at center with dissolve
+        show hero smile at heroRight with dissolve
+        $textProperties["pos"] = (0.94, 0.8)
         h "{i}Я... я смог!{/i}"
         
         show assistant smile at assistantPos with dissolve
+        $textProperties["pos"] = (0.58, 0.8)
+        $textProperties["align"] = 0.0
         a "Ты молодец! Ты победил хакера и вернул свои данные!"
         a "Теперь твое сознание может вернуться в тело."
         
-        show hacker idle at right with dissolve
+        hide assistant with dissolve
+        pause 0.5
+        show hacker idle at hackerLeft with dissolve
         x "Невозможно... Как ты смог меня победить?!"
+        $textProperties["pos"] = (0.71, 0.8)
+        $textProperties["align"] = 1.0
+        show hero idle at heroRight with dissolve
         h "Потому что я боролся за свою жизнь и за безопасность других людей!"
+        $textProperties["pos"] = (0.58, 0.8)
         x "Это... это не конец..."
         
         hide hacker with Dissolve(0.5)
+        show assistant smile at assistantPos with dissolve
         
         a "Не волнуйся, я восстановлю все твои данные."
+
+        show hero smile at heroRight with dissolve
         a "Скоро ты проснешься в своем теле."
+        $textProperties["pos"] = (0.66, 0.8)
         h "Спасибо тебе за все! Без тебя я бы не справился."
+        $textProperties["pos"] = (0.58, 0.8)
         a "Всегда рада помочь. Удачи в реальном мире!"
         
         scene bgBlack with Dissolve(2.0)
+        $isInGame = False
         show expression Solid("#00000080") as prolog_overlay
-        centered "{=prolog_narrator}ПОБЕДА!{/=}"
+        centered "{=prolog_narrator}ПОБЕДА!{/=}{w=2.5}{nw}"
         pause 2.0
-        centered "{=prolog_narrator}Герой вернулся в свое тело и предупредил всех об опасности.{/=}"
-        pause 3.0
-        centered "{=prolog_narrator}Хакер был остановлен, и больше никто не пострадал от его вируса.{/=}"
-        pause 3.0
-        centered "{=prolog_narrator}КОНЕЦ ПРОЛОГА{/=}"
+        centered "{=prolog_narrator}Герой вернулся в свое тело и предупредил всех об опасности.{/=}{w=5.0}{nw}"
+        pause 2.0
+        centered "{=prolog_narrator}Хакер был остановлен, и больше никто не пострадал от его вируса.{/=}{w=5.0}{nw}"
+        pause 2.0
+        centered "{=prolog_narrator}КОНЕЦ{/=}"
         pause 2.0
         hide prolog_overlay
         
     else:
         # Концовка поражения
         scene bgMainCRT with Dissolve(0.5)
-        show hero idle at center with dissolve
-        
+        show hero idle at heroRight with dissolve
+        $textProperties["pos"] = (0.79, 0.8)
         h "{i}Мне не удалось... Я проиграл...{/i}"
         
-        show hacker idle at left with dissolve
+        show hacker idle at hackerLeft with dissolve
+        $textProperties["pos"] = (0.58, 0.8)
+        $textProperties["align"] = 0.0
         x "Ха-ха-ха! Я же говорил, что ты не справишься!"
         x "Твое сознание останется здесь навсегда!"
-        
+
+        #show hacker idle:
+        #    linear 0.5 xpos 0.32
+
         # Глитч-помощник пытается помочь
-        show assistant surprised at assistantPos with Dissolve(0.2)
+        hide hacker with dissolve
+        pause 0.6
+        show assistant surprised at assistantPos with Dissolve(0.07)
         hide assistant with Dissolve(0.1)
         show assistant surprised at assistantPos with Dissolve(0.1)
         
@@ -480,22 +804,25 @@ label prologue_ending:
         a "У меня осталось немного энергии..."
         a "Я... отправлю тебя... обратно..."
         
+        $textProperties["pos"] = (0.72, 0.8)
         h "Нет! Не делай этого! Ты можешь не выжить!"
+        $textProperties["pos"] = (0.58, 0.8)
         a "Это... моя миссия... Защищать... людей..."
+        show assistant idle
         a "Прощай... друг..."
         
         hide assistant with Dissolve(1.0)
-        hide hacker with dissolve
         hide hero with dissolve
         
         scene bgBlack with Dissolve(2.0)
+        $isInGame = False
         show expression Solid("#00000080") as prolog_overlay
-        centered "{=prolog_narrator}ПОРАЖЕНИЕ{/=}"
-        pause 2.0
-        centered "{=prolog_narrator}Помощник пожертвовала собой, чтобы вернуть героя в реальный мир.{/=}"
-        pause 3.0
-        centered "{=prolog_narrator}Герой проснулся в своем теле, но хакер все еще на свободе...{/=}"
-        pause 3.0
+        centered "{=prolog_narrator}ПОРАЖЕНИЕ{/=}{w=4.5}{nw}"
+        pause 1.0
+        centered "{=prolog_narrator}Помощник пожертвовала собой, чтобы вернуть героя в реальный мир.{/=}{w=6.0}{nw}"
+        pause 1.0
+        centered "{=prolog_narrator}Герой проснулся в своем теле, но хакер все еще на свободе...{/=}{w=6.0}{nw}"
+        pause 1.0
         centered "{=prolog_narrator}История продолжится...{/=}"
         pause 2.0
         hide prolog_overlay
@@ -510,20 +837,24 @@ label prologue_ending:
 # Этот ярлык последовательно вызывает все сцены пролога
 label prologue_main:
     # Часть 1: До оцифровки (на фоне prolog-bg)
-    call prologue_scene_0a_intro
-    call prologue_scene_0b_home
-    call prologue_scene_0c_game_choice
+    call prologue_scene_0a_intro from _call_prologue_scene_0a_intro
+    call prologue_scene_0b_home from _call_prologue_scene_0b_home
+    call prologue_scene_0c_game_choice from _call_prologue_scene_0c_game_choice
     
     # Запуск Space Shooter (первая игра)
-    call game_space_shooter(return_to_caller=True)
-    
+    $ config.skipping = None
+    $ config.allow_skipping = False
+    call game_space_shooter(return_to_caller=True, lives = 3, max_waves = 5)
+    $ config.allow_skipping = True
+
     # Встреча с хакером и оцифровка
-    call prologue_scene_0d_hacker_appears
+    call prologue_scene_0d_hacker_appears from _call_prologue_scene_0d_hacker_appears
     
     # Часть 2: После оцифровки (на фоне main_background_crt)
     scene bgMainCRT with Dissolve(1.0)
+    $isInGame = True
+    call prologue_scene_1_awakening from _call_prologue_scene_1_awakening
     
-    call prologue_scene_1_awakening
     call prologue_scene_2_meeting_assistant
     call prologue_scene_3_rescue_plan
     call prologue_scene_4_reconnaissance_prep

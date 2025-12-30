@@ -3,10 +3,10 @@
 # ============================================================================
 
 # Основные фоны (с масштабированием под размер экрана)
-image bgBlack = im.Scale("images/bgBlack.jpg", 1920, 1080)
-image bgSpaceBackground = im.Scale("images/bgSpaceBackground.jpg", 1920, 1080)
-image bgPrologBackground = im.Scale("images/backgrounds/prolog-bg.jpg", 1920, 1080)
-image bgMainCRT = im.Scale("images/backgrounds/main_background_crt.png", 1920, 1080)
+image bgBlack = Transform("images/bgBlack.jpg", size=(1920, 1080), fit="contain")
+image bgPrologBackground = Transform("images/backgrounds/prolog-bg.jpg", size=(1920, 1080), fit="contain")
+image bgMainCRT = Transform("images/backgrounds/main_background_crt.png", size=(1920, 1080), fit="contain")
+image bgQuiz = Transform("images/backgrounds/quizbg.png", size=(1920, 1080), fit="contain")
 
 # Спрайты персонажей
 image hero idle = "images/characters/main_character.png"
@@ -28,13 +28,36 @@ transform assistantPos:
     xalign 0.0
     ycenter 0.58
 
-image hacker idle = "images/characters/main_villain.png"
+image hacker idle: 
+    "images/characters/main_villain.png"
+    zoom 1.3
+    ycenter 0.7
+
+transform heroRight:
+    xycenter (0.9, 0.56)
+
+transform hackerRight:
+    xycenter (0.89, 0.7)
+
+transform hackerLeft:
+    xzoom -1
+    xycenter (0.12, 0.7)
+
+transform hackerCentre:
+    xycenter (0.5, 0.7)
+
+transform move(x, y, time):
+    linear time xpos x ypos y
 
 # Отключаем систему сохранений для аркадной игры
 define config.has_quicksave = False
 define config.has_autosave = False
 define config.autosave_on_quit = False
 define config.autosave_on_choice = False
+
+#text related shenanigins after entering game
+default isInGame = False
+default textProperties = {"pos":(0.9, 0.8), "align": 1.0, "xsize": 800}
 
 # Определения персонажей для диалогов
 define h = Character("Герой")
@@ -43,5 +66,5 @@ define x = Character("Хакер")
 
 label start:
     # Начало игры - запуск пролога
-    call prologue_main
+    call prologue_main from _call_prologue_main
     return

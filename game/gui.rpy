@@ -1,8 +1,7 @@
 ﻿init python:
     # Подключение шрифта для интерфейса и диалогов.
-    # Используем системный шрифт Ren'Py по умолчанию (DejaVuSans.ttf),
     # чтобы избежать ошибок, если JetBrainsMono отсутствует.
-    default_font = "DejaVuSans.ttf"
+    default_font = "fonts/clacon2.ttf"
     style.default.font = default_font
     style.say_dialogue.font = default_font
     style.say_label.font = default_font
@@ -67,13 +66,13 @@ define gui.interface_text_color = '#404040'
 ## Fonts and Font Sizes ########################################################
 
 ## The font used for in-game text.
-define gui.text_font = "DejaVuSans.ttf"
+define gui.text_font = "fonts/clacon2.ttf"
 
 ## The font used for character names.
-define gui.name_text_font = "DejaVuSans.ttf"
+define gui.name_text_font = "fonts/clacon2.ttf"
 
 ## The font used for out-of-game text.
-define gui.interface_text_font = "DejaVuSans.ttf"
+define gui.interface_text_font = "fonts/clacon2.ttf"
 
 ## The size of normal dialogue text.
 define gui.text_size = 33

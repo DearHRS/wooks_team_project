@@ -126,19 +126,26 @@ style frame:
 ## https://www.renpy.org/doc/html/screen_special.html#say
 
 screen say(who, what):
-
     window:
         id "window"
+        if(isInGame):
+            xycenter textProperties["pos"]
 
         if who is not None:
-
             window:
                 id "namebox"
                 style "namebox"
-                text who id "who"
-
-        text what id "what"
-
+                if(isInGame):
+                    background "#00000000"
+                    #text who id "who" color '#1F633C'
+                else:
+                    background Image("gui/textbox.png", xycenter = (600, 120))
+                    text who id "who"
+                
+        if isInGame:
+            text what id "what" color '#1F633C' text_align textProperties["align"] xsize textProperties["xsize"]
+        else:
+            text what id "what"
 
     ## If there's a side image, display it above the text. Do not display on
     ## the phone variant - there's no room.
@@ -164,8 +171,6 @@ style window:
     xfill True
     yalign gui.textbox_yalign
     ysize gui.textbox_height
-
-    background Image("gui/textbox.png", xalign=0.5, yalign=1.0)
 
 style namebox:
     xpos gui.name_xpos
@@ -277,20 +282,21 @@ screen quick_menu():
             style "quick_menu"
 
             textbutton _("Back") action Rollback()
-            textbutton _("History") action ShowMenu('history')
+            #textbutton _("History") action ShowMenu('history')
             textbutton _("Skip") action Skip() alternate Skip(fast=True, confirm=True)
-            textbutton _("Auto") action Preference("auto-forward", "toggle")
-            textbutton _("Save") action ShowMenu('save')
-            textbutton _("Q.Save") action QuickSave()
-            textbutton _("Q.Load") action QuickLoad()
-            textbutton _("Prefs") action ShowMenu('preferences')
+            #textbutton _("Auto") action Preference("auto-forward", "toggle")
+            #textbutton _("Save") action ShowMenu('save')
+            #textbutton _("Q.Save") action QuickSave()
+            #textbutton _("Q.Load") action QuickLoad()
+            #textbutton _("Prefs") action ShowMenu('preferences')
 
 
 ## This code ensures that the quick_menu screen is displayed in-game, whenever
 ## the player has not explicitly hidden the interface.
+$"""
 init python:
     config.overlay_screens.append("quick_menu")
-
+$"""
 default quick_menu = True
 
 style quick_menu is hbox
@@ -331,30 +337,27 @@ screen navigation():
 
             textbutton _("Start") action Start()
 
-        else:
+        #else:
+        #
+        #    textbutton _("History") action ShowMenu("history")
+        #    textbutton _("Save") action ShowMenu("save")
 
-            textbutton _("History") action ShowMenu("history")
-
-            textbutton _("Save") action ShowMenu("save")
-
-        textbutton _("Load") action ShowMenu("load")
-
-        textbutton _("Preferences") action ShowMenu("preferences")
-
-        if _in_replay:
-
-            textbutton _("End Replay") action EndReplay(confirm=True)
-
+        #textbutton _("Load") action ShowMenu("load")
+        
+        #if _in_replay:
+        #    textbutton _("End Replay") action EndReplay(confirm=True)
+        
         elif not main_menu:
-
+            textbutton _("Resume") action Return()
             textbutton _("Main Menu") action MainMenu()
 
+        textbutton _("Preferences") action ShowMenu("preferences")
         textbutton _("About") action ShowMenu("about")
 
-        if renpy.variant("pc") or (renpy.variant("web") and not renpy.variant("mobile")):
-
+        #if renpy.variant("pc") or (renpy.variant("web") and not renpy.variant("mobile")):
             ## Help isn't necessary or relevant to mobile devices.
-            textbutton _("Help") action ShowMenu("help")
+        #    textbutton _("Help") action ShowMenu("help")
+        
 
         if renpy.variant("pc"):
 
@@ -505,11 +508,6 @@ screen game_menu(title, scroll=None, yinitial=0.0, spacing=0):
 
     use navigation
 
-    textbutton _("Return"):
-        style "return_button"
-
-        action Return()
-
     label title
 
     if main_menu:
@@ -615,11 +613,22 @@ style about_label_text:
 ## https://www.renpy.org/doc/html/screen_special.html#save https://
 ## www.renpy.org/doc/html/screen_special.html#load
 
+#pause screen
 screen save():
-
     tag menu
-
-    use file_slots(_("Save"))
+    frame:
+        xysize  (400, 400)
+        xycenter (0.5, 0.5)
+        text "Paused" color "#236243" size 90 xycenter (0.5, 0.1)
+        background "#00000070"
+        vbox:
+            align (0.35, 0.55)
+            spacing 8
+            textbutton("Resume") text_style "pause_menu_button" action Return()
+            textbutton("Main Menu") text_style "pause_menu_button" action MainMenu()
+            textbutton("Preferences") text_style "pause_menu_button" action ShowMenu("preferences")
+            textbutton("About") text_style "pause_menu_button" action ShowMenu("about")
+            textbutton("Quit") text_style "pause_menu_button" action Quit(confirm=not main_menu)
 
 
 screen load():
@@ -628,13 +637,11 @@ screen load():
 
     use file_slots(_("Load"))
 
-
 screen file_slots(title):
-
     default page_name_value = FilePageNameInputValue(pattern=_("Page {}"), auto=_("Automatic saves"), quick=_("Quick saves"))
 
     use game_menu(title):
-
+        
         fixed:
 
             ## This ensures the input will get the enter event before any of
@@ -718,8 +725,7 @@ screen file_slots(title):
                         textbutton _("Download Sync"):
                             action DownloadSync()
                             xalign 0.5
-
-
+    
 style page_label is gui_label
 style page_label_text is gui_label_text
 style page_button is gui_button
@@ -729,6 +735,12 @@ style slot_button is gui_button
 style slot_button_text is gui_button_text
 style slot_time_text is slot_button_text
 style slot_name_text is slot_button_text
+
+style pause_menu_button is button_text:
+    size 40
+    color "#236243"
+    hover_color "#33ff66"
+
 
 style page_label:
     xpadding 75

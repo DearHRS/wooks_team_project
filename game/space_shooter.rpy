@@ -3,6 +3,12 @@ Space Shooter (Galaga Style) - Mini Game
 """
 
 # Анимация огня для корабля игрока
+
+image bgSpaceBackground: 
+    "images/backgrounds/bgSpaceBackground.jpg"
+    size (932, 950)
+    xycenter (0.5, 0.5)
+
 image playerShip:
     animation
     "images/sprites/Player1.png"
@@ -60,15 +66,52 @@ image dashAnim:
     0.02
     repeat
 
+image virusShoot:
+    animation
+    "images/sprites/virusShoot1.png"
+    0.04
+    "images/sprites/virusShoot2.png"
+    0.04
+    "images/sprites/virusShoot3.png"
+    0.04
+    "images/sprites/virusShoot4.png"
+    0.04
+    "images/sprites/virusShoot5.png"
+    0.02
+    "images/sprites/virusShoot6.png"
+    0.02
+    "images/sprites/virusShoot7.png"
+    0.02
+    "images/sprites/virusShoot8.png"
+    0.02
+    "images/sprites/virusShoot9.png"
+    0.02
+    "images/sprites/virusShoot5.png"
+    0.02
+    "images/sprites/virusShoot6.png"
+    0.02
+    "images/sprites/virusShoot7.png"
+    0.02
+    "images/sprites/virusShoot8.png"
+    0.02
+    "images/sprites/virusShoot9.png"
+    0.02
+    "images/sprites/virusShoot10.png"
+    0.02
+    "images/sprites/virusShoot11.png"
+    0.02
+    repeat
+
 # === КОНСТАНТЫ ===
 define PLAY_AREA = {"xmin": 0.25, "xmax": 0.75, "ymin": 0.05, "ymax": 0.95}
 define SHIP_MUZZLE_OFFSET_X = 0.027
 define SHIP_MUZZLE_FORWARD_Y = -0.03
 define BULLET_STEP = 0.025
 define ENEMY_SIZE = {"hw": 0.03, "hh": 0.045}
-define FORMATION_SPEED = 0.002
-define FORMATION_MAX_OFFSET = 0.08
+define FORMATION_SPEED = 0.001
+define FORMATION_MAX_OFFSET = 0.028
 define GAME_UPDATE_RATE = 0.02
+define TOTAL_WAVES = 10
 
 # === ПЕРЕМЕННЫЕ ИГРЫ ===
 default show_hitboxes = False
@@ -93,6 +136,10 @@ default shipBounds = {
     "ymin": 0.05 + (ship_data["hitboxHeight"] / 2 + 0.005), 
     "ymax": 0.95 - (ship_data["hitboxHeight"] / 2)
 }
+default formationXBounds = (
+    PLAY_AREA["xmin"] + ENEMY_SIZE["hw"] / 2,
+    PLAY_AREA["xmax"] - ENEMY_SIZE["hw"] / 2
+)
 default longAnimations = []
 default bullets = []
 default enemies = []
@@ -129,9 +176,6 @@ init python:
 
     def FireBulletUp():
         """Создает пулю из указанного орудия корабля"""
-        if game_over:
-            return
-        
         if ship_data["isWeaponReady"]:
             ship_data["weaponCooldown"] = 20
             ship_data["isWeaponReady"] = False
@@ -154,19 +198,20 @@ init python:
         """Проверяет, находится ли точка внутри прямоугольника"""
         return (ex - hw / 2) <= px <= (ex + hw / 2) and (ey - hh / 2) <= py <= (ey + hh / 2)
 
-    def ResetGame():
+    def ResetGame(lives, max_waves = 10):
         """Сбрасывает игру к начальному состоянию"""
-        global current_wave, game_over, formation_x_offset, formation_direction
+        global current_wave, game_over, formation_x_offset, formation_direction, TOTAL_WAVES
         
         ship_data["x"] = 0.5
         ship_data["y"] = 0.8
-        ship_data["lives"] = 5
+        ship_data["lives"] = lives
         ship_data["score"] = 0
         ship_data["weaponCooldown"] : 5
         current_wave = 1
         game_over = False
         formation_x_offset = 0.0
         formation_direction = 1
+        TOTAL_WAVES = max_waves
         
         bullets[:] = []
         enemies[:] = []
@@ -180,15 +225,17 @@ init python:
         """Создает врага с заданными координатами"""        
         return {
             "x": x, "y": y, "alive": True, "in_formation": True, "formation_x": x, 
-            "formation_y": y, "dive_timer": 0, "dive_state": None, "dive_dash": False
+            "formation_y": y, "dive_timer": 0, "dive_state": None, "dive_dash": False,
+            "isShooting" : False, "chargeUp" : 20, "cooldown" : 10
         }
     
+    #You wanted to change how enemies are spawned
     def SpawnEnemyFormation(wave):
         """Создает формацию врагов для текущей волны"""
         enemies[:] = []
         
-        rows = min(3 + wave // 2, 5)
-        cols = 8
+        rows = min(2 + wave // 2, 5)
+        cols = 6
         start_y = 0.15
         spacing_x = 0.08
         spacing_y = 0.08
@@ -222,8 +269,7 @@ init python:
         """Обновляет врага, находящегося в формации"""
         enemy["x"] = clamp(
             enemy["formation_x"] + formation_x_offset,
-            PLAY_AREA["xmin"] + ENEMY_SIZE["hw"] / 2,
-            PLAY_AREA["xmax"] - ENEMY_SIZE["hw"] / 2
+            formationXBounds[0], formationXBounds[1]
         )
         
         enemy["dive_timer"] -= 1
@@ -235,8 +281,22 @@ init python:
             else:
                 enemy["dive_timer"] = 60
         
-        if random.random() < 0.002:
-            EnemyShoot(enemy)
+        """перезарядка"""
+        if not enemy["isShooting"]:
+            enemy["cooldown"] -= 1
+
+            if enemy["cooldown"] <= 0 and random.random() < 0.002:
+                enemy["isShooting"] = True
+                enemy["cooldown"] = 10
+
+        """вирус готовиться стрелять"""
+        if enemy["isShooting"]:
+            if enemy["chargeUp"] <= 0:
+                EnemyShoot(enemy)
+                enemy["isShooting"] = False
+                enemy["chargeUp"] = 20
+            else:
+                enemy["chargeUp"] -= 1
     
     def _update_enemy_diving(enemy):
         """Обновляет врага в состоянии пикирования"""
@@ -288,9 +348,6 @@ init python:
     
     def UpdateEnemies():
         """Обновляет состояние всех врагов"""
-        if not enemies or game_over:
-            return
-        
         _update_formation_position()
         
         for enemy in enemies:
@@ -312,12 +369,7 @@ init python:
                 _update_enemy_returning(enemy)
 
     def UpdateEnemyBullets():
-        """Обновляет вражеские пули и проверяет попадания по игроку"""
-        global game_over
-        
-        if not enemy_bullets or game_over:
-            return
-        
+        """Обновляет вражеские пули и проверяет попадания по игроку"""        
         remaining = []
         for bullet in enemy_bullets:
             bullet["y"] += bullet["vy"]
@@ -371,13 +423,13 @@ init python:
         enemies[:] = [e for e in enemies if e["alive"]]
         
         # Проверяем окончание волны
-        if not enemies and not game_over:
+        if not enemies and not IS_GAME_OVER():
             current_wave += 1
             SpawnEnemyFormation(current_wave)
 
     def ProcessInput():
         """Обрабатывает ввод с клавиатуры для управления кораблем"""
-        if game_over:
+        if IS_GAME_OVER():
             return
         
         keys = pygame.key.get_pressed()
@@ -415,6 +467,8 @@ init python:
                 ship_data["hitboxHeight"] * 2, 1, 1, 11, "playerExplodes.wav", "playerHit"
             )
             MoveShip(0, 0.04)
+        else:
+            renpy.sound.play("playerExplodesWithI.wav", channel = "playerHit", relative_volume = 0.4)
 
         if ship_data["lives"] <= 0:
             game_over = True
@@ -462,6 +516,9 @@ init python:
 
         longAnimations[:] = pendingAnimations
 
+    def IS_GAME_OVER():
+        return game_over or (current_wave - 1) >= TOTAL_WAVES
+
     def HideGameScreens():
         """Скрывает все игровые экраны"""
         screens_to_hide = [
@@ -483,8 +540,9 @@ init python:
 
 # === ЭКРАНЫ ===
 screen keymap_screen():
-    key "K_SPACE" action Function(FireBulletUp)
-    timer GAME_UPDATE_RATE repeat True action Function(UpdatePlayer)
+    if not (IS_GAME_OVER()):
+        key "K_SPACE" action Function(FireBulletUp)
+        timer GAME_UPDATE_RATE repeat True action Function(UpdatePlayer)
 
 screen ship_screen():
     default alpha_values = [0.25, 0.50, 0.75, 1]
@@ -508,12 +566,17 @@ screen ship_screen():
 screen bullets_screen():
     for b in bullets:
         add Solid("#00ff00") xysize (3, 10) xycenter (b["x"], b["y"])
-    timer GAME_UPDATE_RATE repeat True action Function(UpdateBullets)
+    
+    
+    if not (IS_GAME_OVER()):
+        timer GAME_UPDATE_RATE repeat True action Function(UpdateBullets)
 
 screen enemy_bullets_screen():
     for b in enemy_bullets:
         add Solid("#ff0000") xysize (3, 10) xycenter (b["x"], b["y"])
-    timer GAME_UPDATE_RATE repeat True action Function(UpdateEnemyBullets)
+    
+    if not (IS_GAME_OVER()):
+        timer GAME_UPDATE_RATE repeat True action Function(UpdateEnemyBullets)
 
 screen longAnimation_screen():
     for longAnim in longAnimations:
@@ -527,10 +590,19 @@ screen longAnimation_screen():
 
 screen enemies_screen():
     for e in enemies:
-        add Transform("virus-36904.png", xysize = (ENEMY_SIZE["hw"], ENEMY_SIZE["hh"])) xycenter (e["x"], e["y"])
+        if not e["isShooting"]:
+            add Transform("images/sprites/virusShoot1.png", xysize = (ENEMY_SIZE["hw"] * 2, ENEMY_SIZE["hh"] * 2)) xycenter (e["x"], e["y"])
+        else:
+            add ImageReference("virusShoot"):
+                xysize (ENEMY_SIZE["hw"] * 2, ENEMY_SIZE["hh"] * 2)
+                xycenter (e["x"], e["y"])
+
         if show_enemy_hitboxes:
             add Solid("#00ff0080") xysize (ENEMY_SIZE["hw"], ENEMY_SIZE["hh"]) xycenter (e["x"], e["y"])
-    timer GAME_UPDATE_RATE repeat True action Function(UpdateEnemies)
+
+    
+    if not (IS_GAME_OVER()):
+        timer GAME_UPDATE_RATE repeat True action Function(UpdateEnemies)
 
 screen hud_screen():
     frame:
@@ -541,12 +613,12 @@ screen hud_screen():
             spacing 40
             text "LIVES: [ship_data[\"lives\"]]" size 24 color "#ffffff"
             text "SCORE: [ship_data[\"score\"]]" size 24 color "#ffff00"
-            text "WAVE: [current_wave]" size 24 color "#00ff00"
+            text "WAVES PASSED: [current_wave - 1] / [TOTAL_WAVES]" size 24 color "#00ff00"
 
 default space_shooter_return_to_caller = False
 
 screen game_over_screen():
-    if game_over:
+    if IS_GAME_OVER():
         modal True
         frame:
             xalign 0.5 yalign 0.5
@@ -556,7 +628,7 @@ screen game_over_screen():
                 spacing 20
                 text "GAME OVER" size 48 color "#ff0000" xalign 0.5
                 text "Final Score: [ship_data[\"score\"]]" size 32 color "#ffff00" xalign 0.5
-                text "Wave Reached: [current_wave]" size 24 color "#00ff00" xalign 0.5
+                text "Wave Passed: [current_wave - 1] / [TOTAL_WAVES]" size 24 color "#00ff00" xalign 0.5
                 if space_shooter_return_to_caller:
                     textbutton "Продолжить" action Return() xalign 0.5
 
@@ -578,14 +650,13 @@ screen play_area_screen():
         add Solid("#00ff00") xysize (2, area_height) xalign 1.0
 
 # === ТОЧКА ВХОДА В ИГРУ ===
-label game_space_shooter(return_to_caller=False):
+label game_space_shooter(return_to_caller=False, lives = 5, max_waves = 10):
     hide screen main_menu_screen
     $ space_shooter_return_to_caller = return_to_caller
-    $ ResetGame()
+    $ ResetGame(lives, max_waves)
     
     scene bgBlack
-    show bgSpaceBackground
-    
+    show bgSpaceBackground    
     show screen play_area_screen zorder 4
     show screen ship_screen zorder 3
     show screen keymap_screen
